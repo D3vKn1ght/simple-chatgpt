@@ -1,0 +1,4 @@
+g4f[openai]
+fastapi
+pydantic
+uvicorn[standard]

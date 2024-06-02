@@ -1,0 +1,1 @@
+docker run -d -p 80:80 trung501/simple-chatgpt:1.0 
