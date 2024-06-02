@@ -5,12 +5,6 @@ from g4f.client import Client
 
 app = FastAPI()
 
-class QuestionRequest(BaseModel):
-    question: str
-
-class TextRequest(BaseModel):
-    text: str
-
 class Message(BaseModel):
     role: str 
     content: str
@@ -21,35 +15,57 @@ class ChatRequest(BaseModel):
 
 client = Client()
 
-def ask(question):
-    global client
-    try:
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": question}],
-        )
-        return response.choices[0].message.content
-    except Exception as e:
-        return "Có lỗi xảy ra, vui lòng thử lại sau"
+
 
 @app.get("/")
 def read_root():
     return "Simple ChatGPT"
 
-@app.post("/explain")
-def explain(request: QuestionRequest):
-    return ask(f"Explain in Vietnamese: {request.question}?")
-
+@app.post("/ask/")
+def ask(question: str = Body(..., embed=True)):
+    global client
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {
+                "role": "system",
+                "content": "The following is a conversation with an AI assistant. The assistant is helpful, creative, clever, and very friendly. Answer as concisely as possible in Vietnamese."
+                },
+                {
+                    "role": "user", 
+                    "content": question
+                }
+                ],
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        return "Có lỗi xảy ra, vui lòng thử lại sau"
+    
 @app.post("/translate")
-def translate(request: TextRequest):
-    return ask(f"Translate to Vietnamese: {request.text}")
-
-@app.post("/ask")
-def answer(request: QuestionRequest):
-    return ask(request.question)
-
+def translate(question: str = Body(..., embed=True)):
+    global client
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {
+                "role": "system",
+                "content": "The following is a conversation with an AI assistant. The assistant is helpful, creative, clever, and very friendly. Answer as concisely as possible in Vietnamese. Please translate the following text to Vietnamese."
+                },
+                {
+                    "role": "user", 
+                    "content": "Translate the following text to Vietnamese: " + question
+                }
+                ],
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        return "Có lỗi xảy ra, vui lòng thử lại sau"
+    
 @app.post("/chat/")
 def chat(chat_request: ChatRequest):
+    global client
     try:
         messages=[{"role": message.role, "content": message.content} for message in chat_request.messages]
         print(messages)
