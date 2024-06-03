@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException, Body
 from pydantic import BaseModel
 import uvicorn
 from g4f.client import Client
-
+from g4f.Provider import RetryProvider,DuckDuckGo,FreeGpt
 app = FastAPI()
 
 class Message(BaseModel):
@@ -13,7 +13,12 @@ class ChatRequest(BaseModel):
     model: str = "gpt-3.5-turbo"
     messages: list[Message] = [Message(role="user", content="Hello")]
 
-client = Client()
+client = Client(
+    provider = RetryProvider([
+        DuckDuckGo,
+        FreeGpt
+    ])
+)
 
 
 
@@ -26,7 +31,7 @@ def ask(question: str = Body(..., embed=True)):
     global client
     try:
         response = client.chat.completions.create(
-            model="gpt-4o",
+            model="gpt-3.5-turbo",
             messages=[
                 {
                 "role": "system",
@@ -47,7 +52,7 @@ def translate(question: str = Body(..., embed=True)):
     global client
     try:
         response = client.chat.completions.create(
-            model="gpt-4o",
+            model="gpt-3.5-turbo",
             messages=[
                 {
                 "role": "system",
