@@ -1,8 +1,9 @@
 from fastapi import FastAPI, HTTPException, Body
 from pydantic import BaseModel
 import uvicorn
+import re
 from g4f.client import Client
-from g4f.Provider import RetryProvider,DuckDuckGo,FreeGpt
+from g4f.Provider import *
 app = FastAPI()
 
 class Message(BaseModel):
@@ -15,12 +16,14 @@ class ChatRequest(BaseModel):
 
 client = Client(
     provider = RetryProvider([
-        DuckDuckGo,
-        FreeGpt
-    ])
+        Blackbox,
+        FreeGpt,
+        DuckDuckGo
+    ],
+    single_provider_retry=True)
 )
 
-
+pattern = r'\$\@\$v=v\d+\.\d+\$\@\$'
 
 @app.get("/")
 def read_root():
@@ -43,7 +46,8 @@ def ask(question: str = Body(..., embed=True)):
                 }
                 ],
         )
-        return response.choices[0].message.content
+        result = re.sub(pattern, '', response.choices[0].message.content)
+        return result
     except Exception as e:
         return "Có lỗi xảy ra, vui lòng thử lại sau"
     
@@ -64,7 +68,8 @@ def translate(question: str = Body(..., embed=True)):
                 }
                 ],
         )
-        return response.choices[0].message.content
+        result = re.sub(pattern, '', response.choices[0].message.content)
+        return result
     except Exception as e:
         return "Có lỗi xảy ra, vui lòng thử lại sau"
     
@@ -79,7 +84,8 @@ def chat(chat_request: ChatRequest):
             messages=messages
         )        
         if response.choices:
-            return response.choices[0].message.content
+            result = re.sub(pattern, '', response.choices[0].message.content)
+            return result
         else:
             return "Không nhận được phản hồi từ API."
     except Exception as e:
